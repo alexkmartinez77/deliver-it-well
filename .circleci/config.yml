@@ -1,46 +1,41 @@
 version: 2.1
+
 jobs:
   preview_deployment:
     docker:
-      - image: circleci/node:latest
+      - image: cimg/node:20.10   # ✅ modern Node version
     environment:
       VERCEL_ORG_ID: $VERCEL_ORG_ID
       VERCEL_PROJECT_ID: $VERCEL_PROJECT_ID
     steps:
       - checkout
       - run:
-          name: Install Vercel CLI
-          command: npm install --global vercel@latest
+          name: Pull Vercel Environment Information (preview)
+          command: npx vercel@latest pull --yes --environment=preview --token=$VERCEL_TOKEN
       - run:
-          name: Pull Vercel Environment Information
-          command: vercel pull --yes --environment=preview --token=$VERCEL_TOKEN
+          name: Build Project Artifacts (preview)
+          command: npx vercel@latest build --token=$VERCEL_TOKEN
       - run:
-          name: Build Project Artifacts
-          command: vercel build --token=$VERCEL_TOKEN
-      - run:
-          name: Deploy Project Artifacts to Vercel
-          command: vercel deploy --prebuilt --token=$VERCEL_TOKEN
+          name: Deploy Project Artifacts to Vercel (preview)
+          command: npx vercel@latest deploy --prebuilt --token=$VERCEL_TOKEN
 
   production_deployment:
     docker:
-      - image: circleci/node:latest
+      - image: cimg/node:20.10   # ✅ same here
     environment:
       VERCEL_ORG_ID: $VERCEL_ORG_ID
       VERCEL_PROJECT_ID: $VERCEL_PROJECT_ID
     steps:
       - checkout
       - run:
-          name: Install Vercel CLI
-          command: npm install --global vercel@latest
+          name: Pull Vercel Environment Information (production)
+          command: npx vercel@latest pull --yes --environment=production --token=$VERCEL_TOKEN
       - run:
-          name: Pull Vercel Environment Information
-          command: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+          name: Build Project Artifacts (production)
+          command: npx vercel@latest build --prod --token=$VERCEL_TOKEN
       - run:
-          name: Build Project Artifacts
-          command: vercel build --prod --token=$VERCEL_TOKEN
-      - run:
-          name: Deploy Project Artifacts to Vercel
-          command: vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+          name: Deploy Project Artifacts to Vercel (production)
+          command: npx vercel@latest deploy --prebuilt --prod --token=$VERCEL_TOKEN
 
 workflows:
   version: 2
@@ -49,8 +44,8 @@ workflows:
       - preview_deployment:
           filters:
             branches:
-              ignore: /main/
+              ignore: main
       - production_deployment:
           filters:
             branches:
-              only: /main/
+              only: main
